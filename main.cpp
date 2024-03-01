@@ -48,7 +48,7 @@ char* toPostfix(char input[100], int length)
   
    for (int i = 0; i < length; i++)
     {
-      // if operand, push to the stack
+      // if operand, push to output
       if (input[i] >= '0' && input[i] <= '9')
         {
           // convert the value to an integer by subtracting character '0'
@@ -57,7 +57,11 @@ char* toPostfix(char input[100], int length)
 	  //cout << output[outCount] << endl;
 	  outCount++;
         }
-      else if (input[i] == '+'|| input[i] == '-')
+      // operator
+      else if (input[i] == '+' ||
+	       input[i] == '-' ||
+	       input[i] == '*' ||
+	       input[i] == '/' ||)
 	{
 	  // peek at the stack
 	  // if the thing on the stack has a higher precedence, output
