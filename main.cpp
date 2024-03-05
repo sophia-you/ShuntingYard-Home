@@ -14,10 +14,15 @@ using namespace std;
  * to output their expression as infix, prefix, or postfix notation.
  */
 
-char* toPostfix(char input[100], int length);
+char* toPostfix(char input[100], int length, Node* &head);
+void push(Node* current, Node* newnode);
+void pop(Node* current, Node* previous);
+char peek(Node* current);
 
 int main()
 {
+  // head of the stack linked list
+  Node* stackHead = new Node();
 
   // prompt user for input
   int max = 100;
@@ -29,7 +34,7 @@ int main()
   //cout << input << endl;
 
   int length = strlen(input);
-  char* output = toPostfix(input, length);
+  char* output = toPostfix(input, length, stackHead);
 
   return 0;
 }
@@ -39,7 +44,7 @@ int main()
  * notation.
  */
 
-char* toPostfix(char input[100], int length)
+char* toPostfix(char input[100], int length, Node* &head)
 {
   // create the output string
   char* output = new char[length + 1];
@@ -56,13 +61,39 @@ char* toPostfix(char input[100], int length)
           output[outCount] = input[i];
 	  //cout << output[outCount] << endl;
 	  outCount++;
+	  cout << "hi" << endl;
         }
       // operator
       else if (input[i] == '+' ||
 	       input[i] == '-' ||
 	       input[i] == '*' ||
-	       input[i] == '/' ||)
+	       input[i] == '/' ||
+	       input[i] == '^')
 	{
+	  // this boolean tests whether the character on the stack has higher
+	  // precedence
+	  bool supercedes = false;
+	  char onStack = peek(head);
+
+	  // everything except the - operation supercedes +
+	  if (input[i] == '+')
+	    {
+	      if (onStack != '\0' && onStack != '-')
+		{
+		  supercedes = true;
+		  cout << "the thing on the stack supercedes." << endl;
+		}
+	    }
+
+	  if (!supercedes) // the current operation has = or > precedence
+	    {
+	      cout << "we supercede" << endl;
+	      Node* toStack = new Node();
+	      toStack->setValue(input[i]);
+	      //push(head, toStack);
+	      // START HERE - change by reference in push and pop!
+	    }
+	  
 	  // peek at the stack
 	  // if the thing on the stack has a higher precedence, output
 	  // else add onto stack
@@ -95,4 +126,16 @@ void pop(Node* current, Node* previous)
       current = current->getNext();
     }
   
+}
+
+/**
+ * This function looks at the first thing in the stack and returns its value
+ */
+char peek(Node* current)
+{
+  while (current->getNext() != NULL)
+    {
+      current = current->getNext();
+    }
+  return current->getValue();
 }
