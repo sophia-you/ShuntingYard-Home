@@ -15,9 +15,9 @@ using namespace std;
  */
 
 char* toPostfix(char input[100], int length, Node* &head);
-void push(Node* current, Node* newnode);
-void pop(Node* current, Node* previous);
-char peek(Node* current);
+void push(Node* head, Node* newnode);
+char pop(Node* &head, Node* previous);
+Node* peek(Node* current);
 
 int main()
 {
@@ -61,7 +61,7 @@ char* toPostfix(char input[100], int length, Node* &head)
           output[outCount] = input[i];
 	  //cout << output[outCount] << endl;
 	  outCount++;
-	  cout << "hi" << endl;
+	  //cout << "hi" << endl;
         }
       // operator
       else if (input[i] == '+' ||
@@ -73,7 +73,7 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  // this boolean tests whether the character on the stack has higher
 	  // precedence
 	  bool supercedes = false;
-	  char onStack = peek(head);
+	  char onStack = peek(head)->getValue();
 
 	  // everything except the - operation supercedes +
 	  if (input[i] == '+')
@@ -81,24 +81,51 @@ char* toPostfix(char input[100], int length, Node* &head)
 	      if (onStack != '\0' && onStack != '-')
 		{
 		  supercedes = true;
-		  cout << "the thing on the stack supercedes." << endl;
+		  /*	  cout << "the thing on the stack supercedes." << endl;
+		  // pop the stack thing to the output queue
+		  output[outCount] = pop(head, head);
+		  cout << output << endl;
+		  outCount++;
+		  */
+		}
+	      if (input[i] == '-')
+		{
 		}
 	    }
 
+	  if (supercedes)
+	    {
+	      cout << "the thing on the stack supercedes." << endl;
+              // pop the stack thing to the output queue
+              output[outCount] = pop(head, head);
+              cout << output << endl;
+              outCount++;
+
+	    }
 	  if (!supercedes) // the current operation has = or > precedence
 	    {
 	      cout << "we supercede" << endl;
-	      Node* toStack = new Node();
-	      toStack->setValue(input[i]);
-	      //push(head, toStack);
-	      // START HERE - change by reference in push and pop!
 	    }
+
+	  // push the current operator to the stack
+	   Node* toStack = new Node();
+           toStack->setValue(input[i]);
+           push(head, toStack);
+           cout << peek(head)->getValue() << endl;
+              // START HERE - change by reference in push and pop!
 	  
 	  // peek at the stack
 	  // if the thing on the stack has a higher precedence, output
 	  // else add onto stack
 	}
     }
+
+   // pop everything from the stack into the output
+   while (peek(head)->getValue() != '\0')
+     {
+       output[outCount] = pop(head, head);
+       outCount++;
+     }
    cout << output << endl;
    return NULL;
 }
@@ -107,8 +134,10 @@ char* toPostfix(char input[100], int length, Node* &head)
  * push is one of the functions for the stack. It adds the newest value to the
  * "top" of the stack - in this case, the next node in the linked list.
  */
-void push(Node* current, Node* newnode)
+void push(Node* head, Node* newnode)
 {
+  Node* current = head;
+  
   // get to the end of the linked list
   while (current->getNext() != NULL)
     {
@@ -117,25 +146,50 @@ void push(Node* current, Node* newnode)
   current->setNext(newnode);
 }
 
-void pop(Node* current, Node* previous)
+/**
+ * This function removes the item on the top of the stack
+ * and returns that item to main. It deletes the item from the stack.
+ */
+char pop(Node* &head, Node* previous)
 {
+  cout << "inside pop" << endl;
+  cout << peek(head)->getValue() << endl;
+  Node* current = head;
   // get to the end of the linked list
   while (current->getNext() != NULL)
     {
       previous = current;
       current = current->getNext();
+      //cout << "currently: " << current->getValue() << endl;
     }
+
+  char toOutput = current->getValue(); // store this value
+  //cout << toOutput << endl;
+  if (previous == current)
+    {
+      cout << "we're at the head rn" << endl;
+      // we're at the head
+      head->setValue('\0');
+      head->setNext(NULL);
+    }
+  else
+    {
+      delete current; // remove from stack
+      previous->setNext(NULL);
+    }
+  
+  return toOutput;
   
 }
 
 /**
  * This function looks at the first thing in the stack and returns its value
  */
-char peek(Node* current)
+Node* peek(Node* current)
 {
   while (current->getNext() != NULL)
     {
       current = current->getNext();
     }
-  return current->getValue();
+  return current;
 }
