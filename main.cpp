@@ -119,9 +119,7 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  
 	  else if (input[i] == '*' || input[i] == '/')
             {
-              if (onStack == '^' ||
-		  onStack == '(' ||
-		  onStack == ')')
+              if (onStack == '^')
                 {
                   // the stack operator has greater precedence
 		  supercedes = true;
@@ -129,7 +127,6 @@ char* toPostfix(char input[100], int length, Node* &head)
 
 	    }
 	
-
 	  if (supercedes)
 	    {
 	      cout << "stack operator has greater prevalence." << endl;
@@ -155,6 +152,20 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  // if the thing on the stack has a higher precedence, output
 	  // else add onto stack
 	}
+
+      // if the current operator is a left parentheses
+      else if (input[i] == '(')
+	{
+	  Node* toStack = new Node();
+          toStack->setValue(input[i]);
+          push(head, toStack);
+	  cout << peek(head)->getValue() << endl;
+	}
+      // put it on the stack immediately
+      // if the current operator is a right parentheses
+      // while thing on the stack is NOT a left parentheses
+      // pop off
+      // when you get to the left parentheses, delete it off the stack
     }
 
    // pop everything from the stack into the output
