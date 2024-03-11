@@ -24,18 +24,29 @@ int main()
   // head of the stack linked list
   Node* stackHead = new Node();
 
-  // prompt user for input
-  int max = 100;
-  char input[max];
-  cout << "Please enter a mathematical expression. Rules:" << endl;
-  cout << "\tThis program only parses single-digit integers." << endl;
-  cout << "\tYou may use the +, -, /, *, ^ and () symbols." << endl;
-  cin.getline(input, max);
-  //cout << input << endl;
+  bool wantToQuit = false;
 
-  int length = strlen(input);
-  char* output = toPostfix(input, length, stackHead);
+  while(!wantToQuit)
+    {
+      // prompt user for input
+      int max = 100;
+      char input[max];
+      cout << "Please enter a mathematical expression. Rules:" << endl;
+      cout << "\tThis program only parses single-digit integers." << endl;
+      cout << "\tYou may use the +, -, /, *, ^ and () symbols." << endl;
+      cin.getline(input, max);
+      //cout << input << endl;
 
+      if (strcmp(input, "quit") == 0)
+	{
+	  wantToQuit = true;
+	}
+      else
+	{
+      int length = strlen(input);
+      char* output = toPostfix(input, length, stackHead);
+	}
+    }
   return 0;
 }
 
@@ -63,8 +74,13 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  outCount++;
 	  //cout << "hi" << endl;
         }
+
+      // this boolean tests whether the character on the stack has higher
+      // precedence
+      bool supercedes = false;
+
       // operator
-      else if (input[i] == '+' ||
+      if (input[i] == '+' ||
 	       input[i] == '-' ||
 	       input[i] == '*' ||
 	       input[i] == '/' ||
@@ -72,30 +88,51 @@ char* toPostfix(char input[100], int length, Node* &head)
 	{
 	  // this boolean tests whether the character on the stack has higher
 	  // precedence
-	  bool supercedes = false;
+	  //bool supercedes = false;
 	  char onStack = peek(head)->getValue();
 
 	  // everything except the - operation supercedes +
 	  if (input[i] == '+')
 	    {
+	      // anything other than the minus sign has greater precedence
 	      if (onStack != '\0' && onStack != '-')
 		{
+		  // onStack supercedes
 		  supercedes = true;
-		  /*	  cout << "the thing on the stack supercedes." << endl;
-		  // pop the stack thing to the output queue
-		  output[outCount] = pop(head, head);
-		  cout << output << endl;
-		  outCount++;
-		  */
+		  
 		}
-	      if (input[i] == '-')
-		{
-		}
+
 	    }
+	  
+	    if (input[i] == '-')
+            {
+              // anything other than the plus sign has greater precedence
+              if (onStack != '\0' && onStack != '+')
+                {
+                  // onStack supercedes
+                  supercedes = true;
+
+                }
+
+            }
+
+	  
+	  else if (input[i] == '*' || input[i] == '/')
+            {
+              if (onStack == '^' ||
+		  onStack == '(' ||
+		  onStack == ')')
+                {
+                  // the stack operator has greater precedence
+		  supercedes = true;
+                }
+
+	    }
+	
 
 	  if (supercedes)
 	    {
-	      cout << "the thing on the stack supercedes." << endl;
+	      cout << "stack operator has greater prevalence." << endl;
               // pop the stack thing to the output queue
               output[outCount] = pop(head, head);
               cout << output << endl;
@@ -104,7 +141,7 @@ char* toPostfix(char input[100], int length, Node* &head)
 	    }
 	  if (!supercedes) // the current operation has = or > precedence
 	    {
-	      cout << "we supercede" << endl;
+	      cout << "current operator has greater prevalence." << endl;
 	    }
 
 	  // push the current operator to the stack
