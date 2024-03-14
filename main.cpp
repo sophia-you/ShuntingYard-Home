@@ -15,9 +15,10 @@ using namespace std;
  */
 
 char* toPostfix(char input[100], int length, Node* &head);
-void push(Node* head, Node* newnode);
+void push(Node* &head, Node* newnode);
 char pop(Node* &head, Node* previous);
 Node* peek(Node* current);
+void print(Node* current);
 
 int main()
 {
@@ -115,7 +116,6 @@ char* toPostfix(char input[100], int length, Node* &head)
                 }
 
             }
-
 	  
 	  else if (input[i] == '*' || input[i] == '/')
             {
@@ -132,7 +132,6 @@ char* toPostfix(char input[100], int length, Node* &head)
 	      cout << "stack operator has greater prevalence." << endl;
               // pop the stack thing to the output queue
               output[outCount] = pop(head, head);
-              cout << output << endl;
               outCount++;
 
 	    }
@@ -145,21 +144,46 @@ char* toPostfix(char input[100], int length, Node* &head)
 	   Node* toStack = new Node();
            toStack->setValue(input[i]);
            push(head, toStack);
-           cout << peek(head)->getValue() << endl;
-              // START HERE - change by reference in push and pop!
 	  
 	  // peek at the stack
 	  // if the thing on the stack has a higher precedence, output
 	  // else add onto stack
 	}
-
+      print(head);
       // if the current operator is a left parentheses
-      else if (input[i] == '(')
+      if (input[i] == '(')
 	{
 	  Node* toStack = new Node();
-          toStack->setValue(input[i]);
-          push(head, toStack);
-	  cout << peek(head)->getValue() << endl;
+	  toStack->setValue(input[i]);
+	  cout << toStack << endl;
+	  push(head, toStack);
+	}
+      
+      // @ a right parenthesis, we must pop everything off the stack
+      else if (input[i] == ')')
+        {
+	  cout << "right parenthesis reached" << endl;
+	  print(head);
+	  // while the last thing on the stack is NOT a left parentheses
+	  /*while (peek(head)->getValue() != '(' || peek(head) != head)
+	    {
+	      // add the last thing on stack to the output
+	      output[outCount] = pop(head, head);
+	      outCount++;
+	      }*/
+	  if (peek(head)->getValue() == '(')
+	    {
+	      // we've reached the end of the parenthetical expression
+	      if (peek(head) != head)
+		{
+		  delete peek(head);
+		}
+	      else
+		{
+		  peek(head)->setValue('\0');
+		  peek(head)->setNext(NULL);
+		}
+	    }
 	}
       // put it on the stack immediately
       // if the current operator is a right parentheses
@@ -182,10 +206,14 @@ char* toPostfix(char input[100], int length, Node* &head)
  * push is one of the functions for the stack. It adds the newest value to the
  * "top" of the stack - in this case, the next node in the linked list.
  */
-void push(Node* head, Node* newnode)
+void push(Node* &head, Node* newnode)
 {
   Node* current = head;
-  
+  if (head == NULL)
+    {
+      head = newnode;
+      return;
+    }
   // get to the end of the linked list
   while (current->getNext() != NULL)
     {
@@ -212,7 +240,8 @@ char pop(Node* &head, Node* previous)
     }
 
   char toOutput = current->getValue(); // store this value
-  //cout << toOutput << endl;
+
+  // the stack is empty
   if (previous == current)
     {
       cout << "we're at the head rn" << endl;
@@ -240,4 +269,15 @@ Node* peek(Node* current)
       current = current->getNext();
     }
   return current;
+}
+
+void print(Node* current)
+{
+  cout << "inside print" << endl;
+  while(current != NULL)
+    {
+      cout << "inside while loop" << endl;
+      cout << current->getValue() << endl;
+      current = current->getNext();
+    }
 }
