@@ -14,16 +14,20 @@ using namespace std;
  * to output their expression as infix, prefix, or postfix notation.
  */
 
-char* toPostfix(char input[100], int length, Node* &head);
+char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
 void push(Node* &head, Node* newnode);
 char pop(Node* &head, Node* previous);
 Node* peek(Node* current);
 void print(Node* current);
+int precedence(char input);
 
 int main()
 {
   // head of the stack linked list
   Node* stackHead = new Node();
+
+  // head of the queue linked list
+  Node* queueHead = new Node();
 
   bool wantToQuit = false;
 
@@ -62,9 +66,10 @@ char* toPostfix(char input[100], int length, Node* &head)
   char* output = new char[length + 1];
   output[length + 1] = '\0';
   int outCount = 0; // this counts tracks we are in the output string
-  
+
    for (int i = 0; i < length; i++)
     {
+      cout << "input: " << input[i] << endl;
       // if operand, push to output
       if (input[i] >= '0' && input[i] <= '9')
         {
@@ -76,9 +81,54 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  //cout << "hi" << endl;
         }
 
+      // operator
+      if (input[i] == '+' ||
+               input[i] == '-' ||
+               input[i] == '*' ||
+               input[i] == '/' ||
+               input[i] == '^')
+	{
+	  char onStack = peek(stackHead)->getValue();
+
+	  // if the precedence of the current operator is lower
+	  if (precedence(input[i]) < precedence(onStack))
+	    {
+	      while (precedence(input[i]) < precedence(onStack))
+		{
+	      // we should pop the current char on stack off
+	      cout << "stack operator has greater prevalence." << endl;
+              // pop the stack thing to the output queue
+              //output[outCount] = pop(stackHead, stackHead);
+              //outCount++;
+
+	      Node* toQueue = new Node();
+	      toQueue->setValue(pop(stackHead, stackHead));
+	      enqueue(queueHead, toQueue);
+	      onStack = peek(stackHead)->getValue();
+		}
+	    }
+	  else if (precedence(input[i]) >= precedence(onStack))
+	    {
+	      cout << "we precede" << endl;
+	    }
+
+	   Node* toStack = new Node();
+           toStack->setValue(input[i]);
+           push(stackHead, toStack);
+	   
+	}
+      
+      else if (input[i] == '(')
+	{
+	  cout << "open parentheses" << endl;
+	}
+      else if (input[i] == ')')
+	{
+	  cout << "close parentheses" << endl;
+	}
       // this boolean tests whether the character on the stack has higher
       // precedence
-      bool supercedes = false;
+      /*bool supercedes = false;
 
       // operator
       if (input[i] == '+' ||
@@ -165,12 +215,12 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  cout << "right parenthesis reached" << endl;
 	  print(head);
 	  // while the last thing on the stack is NOT a left parentheses
-	  /*while (peek(head)->getValue() != '(' || peek(head) != head)
+	  while (peek(head)->getValue() != '(' || peek(head) != head)
 	    {
 	      // add the last thing on stack to the output
 	      output[outCount] = pop(head, head);
 	      outCount++;
-	      }*/
+	    }
 	  if (peek(head)->getValue() == '(')
 	    {
 	      // we've reached the end of the parenthetical expression
@@ -190,10 +240,12 @@ char* toPostfix(char input[100], int length, Node* &head)
       // while thing on the stack is NOT a left parentheses
       // pop off
       // when you get to the left parentheses, delete it off the stack
-    }
+      cout << output << endl;
+      */}
 
+      
    // pop everything from the stack into the output
-   while (peek(head)->getValue() != '\0')
+   while (peek(head) != head)
      {
        output[outCount] = pop(head, head);
        outCount++;
@@ -260,6 +312,35 @@ char pop(Node* &head, Node* previous)
 }
 
 /**
+ * This function adds an item to the rear of the queue
+ */
+void enqueue(Node* &head, Node* newnode)
+{
+  Node* current = head;
+  if (head == NULL)
+    {
+      head = newnode;
+      return;
+    }
+  while (current->getNext() != NULL)
+    {
+      current = current->getNext();
+    }
+  
+  current->setNext(newnode);
+}
+
+/**
+ * This function removes the item at the front of the queue.
+ */ 
+void dequeue(Node* &head)
+{
+  Node* temp = head;
+  head = head->getNext();
+  delete temp;
+}
+
+/**
  * This function looks at the first thing in the stack and returns its value
  */
 Node* peek(Node* current)
@@ -276,8 +357,32 @@ void print(Node* current)
   cout << "inside print" << endl;
   while(current != NULL)
     {
-      cout << "inside while loop" << endl;
+      //cout << "inside while loop" << endl;
       cout << current->getValue() << endl;
       current = current->getNext();
     }
+}
+
+/**
+ * This function returns the degree of prevalence of each operator.
+ */
+int precedence(char input)
+{
+  if (input == '+' || input == '-')
+    {
+      return 1;
+    }
+  else if (input == '*' || input == '/')
+    {
+      return 2;
+    }
+  else if (input == '^')
+    {
+      return 3;
+    }
+  else if (input == '(' || input == ')')
+    {
+      return 4;
+    }
+  return 0;
 }
