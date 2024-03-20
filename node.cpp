@@ -8,7 +8,7 @@ using namespace std;
 Node::Node()
 {
   // initialize all variables as null
-  data = '\0'; // assign as null character
+  data = ' ';
   next = NULL;
   left = NULL;
   right = NULL;

@@ -17,6 +17,8 @@ using namespace std;
 char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
 void push(Node* &head, Node* newnode);
 char pop(Node* &head, Node* previous);
+void enqueue(Node* &head, Node* newnode);
+void dequeue(Node* &head);
 Node* peek(Node* current);
 void print(Node* current);
 int precedence(char input);
@@ -49,7 +51,7 @@ int main()
       else
 	{
       int length = strlen(input);
-      char* output = toPostfix(input, length, stackHead);
+      char* output = toPostfix(input, length, stackHead, queueHead);
 	}
     }
   return 0;
@@ -60,7 +62,7 @@ int main()
  * notation.
  */
 
-char* toPostfix(char input[100], int length, Node* &head)
+char* toPostfix(char input[100], int length, Node* &stackHead, Node *&queueHead)
 {
   // create the output string
   char* output = new char[length + 1];
@@ -70,15 +72,18 @@ char* toPostfix(char input[100], int length, Node* &head)
    for (int i = 0; i < length; i++)
     {
       cout << "input: " << input[i] << endl;
-      // if operand, push to output
+      // if number, push to output
       if (input[i] >= '0' && input[i] <= '9')
         {
-          // convert the value to an integer by subtracting character '0'
           //int operand = input[i] - '0';
           output[outCount] = input[i];
 	  //cout << output[outCount] << endl;
 	  outCount++;
 	  //cout << "hi" << endl;
+	  
+	  Node* toQueue = new Node();
+          toQueue->setValue(input[i]);
+          enqueue(queueHead, toQueue);
         }
 
       // operator
@@ -91,23 +96,28 @@ char* toPostfix(char input[100], int length, Node* &head)
 	  char onStack = peek(stackHead)->getValue();
 
 	  // if the precedence of the current operator is lower
-	  if (precedence(input[i]) < precedence(onStack))
+	  if (precedence(input[i]) <= precedence(onStack))
 	    {
-	      while (precedence(input[i]) < precedence(onStack))
+	      while (precedence(input[i]) <= precedence(onStack) &&
+		     peek(stackHead) != NULL)
 		{
 	      // we should pop the current char on stack off
 	      cout << "stack operator has greater prevalence." << endl;
               // pop the stack thing to the output queue
-              //output[outCount] = pop(stackHead, stackHead);
-              //outCount++;
+              output[outCount] = pop(stackHead, stackHead);
+              outCount++;
 
 	      Node* toQueue = new Node();
-	      toQueue->setValue(pop(stackHead, stackHead));
-	      enqueue(queueHead, toQueue);
-	      onStack = peek(stackHead)->getValue();
+	      if (stackHead != NULL)
+		{
+		  cout << "out of pop" << endl;
+		  toQueue->setValue(pop(stackHead, stackHead));
+		  enqueue(queueHead, toQueue);
+		}
+		  onStack = peek(stackHead)->getValue();
 		}
 	    }
-	  else if (precedence(input[i]) >= precedence(onStack))
+	  else if (precedence(input[i]) > precedence(onStack))
 	    {
 	      cout << "we precede" << endl;
 	    }
@@ -245,12 +255,13 @@ char* toPostfix(char input[100], int length, Node* &head)
 
       
    // pop everything from the stack into the output
-   while (peek(head) != head)
+   while (peek(stackHead) != stackHead)
      {
-       output[outCount] = pop(head, head);
+       output[outCount] = pop(stackHead, stackHead);
        outCount++;
      }
-   cout << output << endl;
+   cout << "output string: " << output << endl;
+   print(queueHead);
    return NULL;
 }
 
@@ -281,34 +292,64 @@ void push(Node* &head, Node* newnode)
 char pop(Node* &head, Node* previous)
 {
   cout << "inside pop" << endl;
+  /*if (peek(head) != NULL)
+    {
   cout << peek(head)->getValue() << endl;
-  Node* current = head;
-  // get to the end of the linked list
-  while (current->getNext() != NULL)
-    {
-      previous = current;
-      current = current->getNext();
-      //cout << "currently: " << current->getValue() << endl;
-    }
+      Node* current = head;
+      // get to the end of the linked list
+      while (current->getNext() != NULL)
+	{
+	  previous = current;
+	  current = current->getNext();
+	  //cout << "currently: " << current->getValue() << endl;
+	}
 
-  char toOutput = current->getValue(); // store this value
+      char toOutput = current->getValue(); // store this value
 
-  // the stack is empty
-  if (previous == current)
+      // the stack is empty
+      if (current == head)
+	{
+	  cout << "we're at the head rn" << endl;
+	  // we're at the head
+	  head = NULL;
+	  //cout <<  "segfault?" << endl;
+	}
+      else
+	{
+	  delete current; // remove from stack
+	  previous->setNext(NULL);
+	}
+
+
+      return toOutput;
+      }*/
+
+  if (head != NULL)
     {
-      cout << "we're at the head rn" << endl;
-      // we're at the head
-      head->setValue('\0');
-      head->setNext(NULL);
+      print(head);
+      Node* current = head;
+      Node* previous = head;
+      while (current->getNext() != NULL)
+	{
+	  previous = current;
+	  current = current->getNext();
+	  // move down the list
+	}
+      // we have reached the last node in the list
+      if (current == head)
+	{
+	  // set head to null
+	  head = NULL;
+	}
+      else
+	{
+	  previous->setNext(NULL);
+	  cout << "current->getValue() = " << current->getValue() << endl;
+	  return current->getValue();
+	  delete current;
+	}
     }
-  else
-    {
-      delete current; // remove from stack
-      previous->setNext(NULL);
-    }
-  
-  return toOutput;
-  
+  return ' ';
 }
 
 /**
@@ -354,12 +395,22 @@ Node* peek(Node* current)
 
 void print(Node* current)
 {
+  
   cout << "inside print" << endl;
   while(current != NULL)
     {
       //cout << "inside while loop" << endl;
-      cout << current->getValue() << endl;
-      current = current->getNext();
+      if (current->getValue() != '\0')
+	{
+	  cout << "in while loop" << endl;
+	  cout << current->getValue() << endl;
+	  current = current->getNext();
+	}
+      else
+	{
+	  cout << "for some reason, head is null" << endl;
+	  current = NULL;
+	}
     }
 }
 
