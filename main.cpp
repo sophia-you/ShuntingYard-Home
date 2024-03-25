@@ -14,7 +14,7 @@ using namespace std;
  * to output their expression as infix, prefix, or postfix notation.
  */
 
-char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
+void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
 void push(Node* &head, Node* newnode);
 char pop(Node* &head, Node* previous);
 void enqueue(Node* &head, Node* newnode);
@@ -42,7 +42,6 @@ int main()
       cout << "\tThis program only parses single-digit integers." << endl;
       cout << "\tYou may use the +, -, /, *, ^ and () symbols." << endl;
       cin.getline(input, max);
-      //cout << input << endl;
 
       if (strcmp(input, "quit") == 0)
 	{
@@ -51,7 +50,7 @@ int main()
       else
 	{
       int length = strlen(input);
-      char* output = toPostfix(input, length, stackHead, queueHead);
+      toPostfix(input, length, stackHead, queueHead);
 	}
     }
   return 0;
@@ -62,14 +61,12 @@ int main()
  * notation.
  */
 
-char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
+void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 {
 
   // walk through the input and convert to postfix
    for (int i = 0; i < length; i++)
     {
-      // print(queueHead);
-      // cout << "input: " << input[i] << endl;
 
       // if number, push to output
       if (input[i] >= '0' && input[i] <= '9')
@@ -94,11 +91,10 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 	  if (peek(stackHead) != NULL)
 	    {
 	      onStack = peek(stackHead)->getValue();
-	      // cout << "on stack: " << onStack << endl;
 	    }
 	  
 	  // if the precedence of the current operator is lower
-	  // for example, if the current operatur i is a '+' but
+	  // for example, if the current operator i is a '+' but
 	  // the thing on the stack is a '*'
 	  if (peek(stackHead) != NULL && precedence(input[i]) <= precedence(onStack))
 	    {
@@ -107,52 +103,41 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 		     peek(stackHead) != NULL)
 		{
 		  onStack = peek(stackHead)->getValue();
-		  // cout << "on stack: " << onStack << endl;
 		  
-		  // we should pop the current char on stack off
-		  // cout << "stack operator has greater prevalence." << endl;
-
 		  // the queue stores the values in postfix
 		  Node* toQueue = new Node();
 		  if (stackHead != NULL && precedence(input[i]) <= precedence(onStack))
 		    {
-		      // cout << "pop to the queue!" << endl;
 		      toQueue->setValue(pop(stackHead, stackHead));
-		      // cout << "to Queue: " << toQueue->getValue() << endl;
 		      enqueue(queueHead, toQueue);
-
 		    }
 		}
 	    }
 
-	  // if it's first on the stack or has > precedence
-	  else if (peek(stackHead) == NULL || precedence(input[i]) > precedence(onStack))
-	    {
-	      cout << "we precede" << endl;
-	    }
-
-	   Node* toStack = new Node();
-           toStack->setValue(input[i]);
-           push(stackHead, toStack);
-	   cout << "on stack: " << peek(stackHead)->getValue() << endl;
+	  // regardless of precedence, we must add the current operator
+	  // to the stack.
+	  Node* toStack = new Node();
+          toStack->setValue(input[i]);
+          push(stackHead, toStack);
 	   
 	}
       
       else if (input[i] == '(')
 	{
-	  cout << "open parentheses" << endl;
-	  // push this open parenthesis onto the stack
-	  // (we're going to throw it away later)
 	  Node* toStack = new Node();
           toStack->setValue(input[i]);
           push(stackHead, toStack);
-          cout << "on stack in parenthesis: " << peek(stackHead)->getValue() << endl;
 	}
+
+      // the idea here is that when we see a close parenthesis,
+      // we want to pop everything currently on the stack OFF
+      // and into the queue. When we reach an open parenthesis
+      // we're going to pop it off too, but we will not
+      // put it inside the queue. This is because the postfix
+      // notation will not deal with parentheses.
+      
       else if (input[i] == ')')
 	{
-	  cout << "close parentheses: " << endl;
-	  print(stackHead);
-	  cout << "" << endl;
 	  char onStack = '\0';
 	  if (peek(stackHead) != NULL)
 	    {
@@ -163,17 +148,13 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 	  while(peek(stackHead) != NULL && onStack != '(')
 	    {
 	      onStack = peek(stackHead)->getValue();
-	      cout << "on stack in parenthesis: " << onStack << endl;
 	      Node* toQueue = new Node();
 	      toQueue->setValue(pop(stackHead, stackHead));
-	      cout << "in parenthesis to queue: " << toQueue->getValue() << endl;
-	      print(stackHead);
 
 	      if (onStack != '(')
 		{
 		  enqueue(queueHead, toQueue);
 		}
-	      print(queueHead);
 	    }
 	  
 	}
@@ -183,24 +164,21 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
    // pop everything from the stack into the output
    while (peek(stackHead) != NULL)
      {
-       //output[outCount] = pop(stackHead, stackHead);
-       //outCount++;
-
-       cout << "peek value: " << peek(stackHead)->getValue() << endl;
        Node* poppedNode = new Node();
        char poppedChar = pop(stackHead, stackHead);
-       cout << "popped char: " << poppedChar << endl;
        poppedNode->setValue(poppedChar);
-       cout << "popped node: " << poppedNode->getValue() << endl;
        enqueue(queueHead, poppedNode); 
      }
-   //cout << "output string: " << output << endl;
+
+   cout << "Postfix Conversion: ";
    print(queueHead);
+   cout << endl;
+
+   // clear the queue
    while (peek(queueHead) != NULL)
      {
        dequeue(queueHead);
      }
-   return NULL;
 }
 
 /**
@@ -215,6 +193,7 @@ void push(Node* &head, Node* newnode)
       head = newnode;
       return;
     }
+  
   // get to the end of the linked list
   while (current->getNext() != NULL)
     {
@@ -229,18 +208,17 @@ void push(Node* &head, Node* newnode)
  */
 char pop(Node* &head, Node* previous)
 {
-  cout << "inside pop" << endl;
+  //  cout << "inside pop" << endl;
   if (head != NULL)
     {
-      print(head);
       Node* current = head;
       Node* previous = head;
       while (current->getNext() != NULL)
 	{
 	  previous = current;
-	  current = current->getNext();
-	  // move down the list
+	  current = current->getNext();	  // move down the list
 	}
+      
       // we have reached the last node in the list
       if (current == head)
 	{
@@ -251,7 +229,6 @@ char pop(Node* &head, Node* previous)
       else
 	{
 	  previous->setNext(NULL);
-	  cout << "current->getValue() = " << current->getValue() << endl;
 	  return current->getValue();
 	  delete current;
 	}
@@ -307,11 +284,8 @@ Node* peek(Node* current)
 
 void print(Node* current)
 {
-  
-  cout << "inside print" << endl;
   while(current != NULL)
     {
-      //cout << "inside while loop" << endl;
       if (current->getValue() != '\0')
 	{
 	  cout << current->getValue();
