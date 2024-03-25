@@ -64,23 +64,17 @@ int main()
 
 char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 {
-  // create the output string
-  char* output = new char[length + 1];
-  output[length + 1] = '\0';
-  int outCount = 0; // this counts tracks we are in the output string
 
+  // walk through the input and convert to postfix
    for (int i = 0; i < length; i++)
     {
-      cout << "input: " << input[i] << endl;
+      // print(queueHead);
+      // cout << "input: " << input[i] << endl;
+
       // if number, push to output
       if (input[i] >= '0' && input[i] <= '9')
         {
-          //int operand = input[i] - '0';
-          //output[outCount] = input[i];
-	  //cout << output[outCount] << endl;
-	  //outCount++;
-	  //cout << "hi" << endl;
-	  
+         
 	  Node* toQueue = new Node();
           toQueue->setValue(input[i]);
           enqueue(queueHead, toQueue);
@@ -93,33 +87,41 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
                input[i] == '/' ||
                input[i] == '^')
 	{
+
+	  // this character keeps track of what is last on the stack
 	  char onStack = '\0';
+	  
 	  if (peek(stackHead) != NULL)
 	    {
 	      onStack = peek(stackHead)->getValue();
-	      cout << "on stack: " << onStack << endl;
+	      // cout << "on stack: " << onStack << endl;
 	    }
 	  
 	  // if the precedence of the current operator is lower
+	  // for example, if the current operatur i is a '+' but
+	  // the thing on the stack is a '*'
 	  if (peek(stackHead) != NULL && precedence(input[i]) <= precedence(onStack))
 	    {
+	      // while the precedence is still <=, pop off the top of the stack
 	      while (precedence(input[i]) <= precedence(onStack) &&
 		     peek(stackHead) != NULL)
 		{
-	      // we should pop the current char on stack off
-	      cout << "stack operator has greater prevalence." << endl;
-              // pop the stack thing to the output queue
-              //output[outCount] = pop(stackHead, stackHead);
-              //outCount++;
-
-	      Node* toQueue = new Node();
-	      if (stackHead != NULL)
-		{
-		  cout << "out of pop" << endl;
-		  toQueue->setValue(pop(stackHead, stackHead));
-		  enqueue(queueHead, toQueue);
-		}
 		  onStack = peek(stackHead)->getValue();
+		  // cout << "on stack: " << onStack << endl;
+		  
+		  // we should pop the current char on stack off
+		  // cout << "stack operator has greater prevalence." << endl;
+
+		  // the queue stores the values in postfix
+		  Node* toQueue = new Node();
+		  if (stackHead != NULL && precedence(input[i]) <= precedence(onStack))
+		    {
+		      // cout << "pop to the queue!" << endl;
+		      toQueue->setValue(pop(stackHead, stackHead));
+		      // cout << "to Queue: " << toQueue->getValue() << endl;
+		      enqueue(queueHead, toQueue);
+
+		    }
 		}
 	    }
 
@@ -139,14 +141,45 @@ char* toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
       else if (input[i] == '(')
 	{
 	  cout << "open parentheses" << endl;
+	  // push this open parenthesis onto the stack
+	  // (we're going to throw it away later)
+	  Node* toStack = new Node();
+          toStack->setValue(input[i]);
+          push(stackHead, toStack);
+          cout << "on stack in parenthesis: " << peek(stackHead)->getValue() << endl;
 	}
       else if (input[i] == ')')
 	{
-	  cout << "close parentheses" << endl;
+	  cout << "close parentheses: " << endl;
+	  print(stackHead);
+	  cout << "" << endl;
+	  char onStack = '\0';
+	  if (peek(stackHead) != NULL)
+	    {
+	      onStack = peek(stackHead)->getValue();
+	    }
+
+	  // pop everything up to the open parenthesis into output
+	  while(peek(stackHead) != NULL && onStack != '(')
+	    {
+	      onStack = peek(stackHead)->getValue();
+	      cout << "on stack in parenthesis: " << onStack << endl;
+	      Node* toQueue = new Node();
+	      toQueue->setValue(pop(stackHead, stackHead));
+	      cout << "in parenthesis to queue: " << toQueue->getValue() << endl;
+	      print(stackHead);
+
+	      if (onStack != '(')
+		{
+		  enqueue(queueHead, toQueue);
+		}
+	      print(queueHead);
+	    }
+	  
 	}
       }
 
-      
+   
    // pop everything from the stack into the output
    while (peek(stackHead) != NULL)
      {
@@ -313,7 +346,7 @@ int precedence(char input)
     }
   else if (input == '(' || input == ')')
     {
-      return 4;
+      return -1;
     }
   return 0;
 }
