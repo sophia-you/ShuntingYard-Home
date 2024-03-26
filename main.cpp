@@ -14,16 +14,34 @@ using namespace std;
  * to output their expression as infix, prefix, or postfix notation.
  */
 
-void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
+// FUNCTION PROTOTYPES
+
+// initial conversion from user input
+void toTree(char input[100], int length, Node* &stackHead, Node* &queueHead);
+int precedence(char input);
+void print(Node* current);
+
+// dealing with the expression tree
 void makeTree(Node* &queueHead, Node* &treeHead);
 void printTree(Node* current, int numTabs);
+
+// prefix, infix, and postfix stuff
+/*
+ * Note to self
+ * Prefix | operator before operands; parent, left child, right child
+ * Infix | operator between operands; left child, parent, right child
+ * Postfix | operator after operands; left chid, right child, parent
+ */
+void toPrefix(Node* current, Node* &queueHead);
+void toInfix(Node* current, Node* &queueHead);
+void toPostfix(Node* current, Node* &queueHead);
+
+// general functions
 void push(Node* &head, Node* newnode);
 Node* pop(Node* &head, Node* previous);
 void enqueue(Node* &head, Node* newnode);
 Node* dequeue(Node* &head);
 Node* peek(Node* current);
-void print(Node* current);
-int precedence(char input);
 
 int main()
 {
@@ -56,18 +74,100 @@ int main()
 	{
 	  // convert user input to postfix notation
 	  int length = strlen(input);
-	  toPostfix(input, length, stackHead, queueHead);
+	  toTree(input, length, stackHead, queueHead);
 
 	  // make and print the expression tree
 	  makeTree(queueHead, treeHead);
 	  Node* current = treeHead;
+
+	  // hypothetically, we shouldn't need this while loop,
+	  // because when the postfix expression has been completely
+	  // fed into the expression tree, the only thing on the tree
+	  // stack should be the VERY LAST operator from the postfix.
+	  // thus, we would only print out the left and right children
+	  // of treeHead. This is a safeguard in case something
+	  // very wrong happens.
 	  while (current != NULL)
 	    {
-	      // we want to print out every tree in the stack
 	      printTree(current, 0);
 	      current = current->getNext();
 	    }
-	  // create the binary expression tree
+
+	  // based on user input, convert expression tree to pre, in, or postfix
+	  cout << "" << endl;
+	  cout << "Please type, using all lowercase, one of the following commands to convert your expression tree." << endl;
+	  cout << "\tprefix" << endl;
+	  cout << "\tinfix" << endl;
+	  cout << "\tpostfix" << endl;
+	  cout << "" << endl;
+
+	  cin.getline(input, max);
+
+	  // convert to PREFIX
+	  if (strcmp(input, "prefix") == 0)
+	    {
+	      cout << "Prefix Expression: ";
+	      toPrefix(treeHead, queueHead);
+	      print(queueHead);
+	      cout << endl;
+	    }
+	  // convert to INFIX
+	  else if (strcmp(input, "infix") == 0)
+            {
+	      cout << "Infix Expression: ";
+	      toInfix(treeHead, queueHead);
+              print(queueHead);
+              cout << endl;
+            }
+	  // convert to POSTFIX
+	  else if (strcmp(input, "postfix") == 0)
+            {
+	      cout << "Postfix Expression: ";
+	      toPostfix(treeHead, queueHead);
+              print(queueHead);
+              cout << endl;
+            }
+
+	  /*
+	   * now that we've finished converting the user input,
+	   * we should take precautions to clear the stack, queue
+	   * and tree heads - otherwise, some of that data may
+	   * carry over the next time the user gives an input
+	   */
+
+	  print(queueHead);
+	  while (queueHead != NULL)
+	    {
+	      cout << "dequeueing qh" << endl;
+	      Node* current = dequeue(queueHead);
+	      print(queueHead);
+	     
+	    }
+	  if (queueHead == NULL)
+	    {
+	      cout << "successfully dequeued qh." << endl;
+	    }
+	  print(treeHead);
+	  while (treeHead != NULL)
+	    {
+	      cout << "dequeueing th" << endl;
+	      Node* current = dequeue(treeHead);
+	      print(treeHead);
+	      if (current != treeHead)
+		{
+		  Node* temp = current;
+		  delete temp;
+		}
+	    }
+	  if (treeHead == NULL)
+	    {
+	      cout << "successfully dequeued treeHead" << endl;
+	    }
+
+	  if (stackHead == NULL)
+	    {
+	      cout << "stackhead's null" << endl;
+	    }
 	}
     }
   return 0;
@@ -78,7 +178,7 @@ int main()
  * notation.
  */
 
-void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
+void toTree(char input[100], int length, Node* &stackHead, Node* &queueHead)
 {
 
   // walk through the input and convert to postfix
@@ -201,38 +301,26 @@ void makeTree(Node* &queueHead, Node* &treeHead)
       return;
     }
 
-  cout << "we are inside the make tree function!" << endl;
   Node* dequeued = dequeue(queueHead);
-  cout << "we have dequeued: " <<  dequeued->getValue() << endl;
   dequeued->setNext(NULL); // make sure dequeued is NOT connected to anything
 
   // if the dequeued value is an OPERAND, push it onto the tree stack
   if (dequeued->getValue() >= '0' && dequeued->getValue() <= '9')
     {
-      cout << "dequeued is an operand" << endl;
       // push the dequeued value onto the tree stack                           
       push(treeHead, dequeued);
-      cout << "printed tree stack: ";
-      print(treeHead);
-      cout << endl;
     }
 
   // otherwise, the dequeued value is an OPERATOR
   else
     {
-      cout << "dequeued is an operator" << endl;
+      //cout << "dequeued is an operator" << endl;
       // pop off the last two things, they become the left and right children
       Node* right = pop(treeHead, treeHead);
       Node* left = pop(treeHead, treeHead);
       dequeued->setLeft(left);
       dequeued->setRight(right);
-      
-      cout << "\tleft child: " << dequeued->getLeft()->getValue() << endl;
-      cout << "\tright child: " << dequeued->getRight()->getValue() << endl;
       push(treeHead, dequeued);
-      cout << "printed tree stack: ";
-      print(treeHead);
-      cout << endl;
     }
   
   // call makeTree again; since we called on dequeued, queueHead has changed
@@ -266,6 +354,60 @@ void printTree(Node* current, int numTabs)
     }
   cout << current->getValue() << "\n"; // print the current value
   printTree(current->getLeft(), numTabs); // recursively print left child
+}
+
+/**
+ * This function uses the expression tree to create a
+ * prefix expression.
+ */
+void toPrefix(Node* current, Node* &queueHead)
+{
+  // once everything is done, jump out of the function                                 
+  if (current == NULL)
+    {
+      return;
+    }
+
+  // operator before operands
+  enqueue(queueHead, current);
+  toPrefix(current->getLeft(), queueHead);
+  toPrefix(current->getRight(), queueHead);
+}
+
+/**                                                                                    
+ * This function uses the expression tree to create an
+ * infix expression.
+ */
+void toInfix(Node* current, Node* &queueHead)
+{
+  // once everything is done, jump out of the function                                  
+  if (current == NULL)
+    {
+      return;
+    }
+
+  // operator between operands                                     
+  toInfix(current->getLeft(), queueHead);
+  enqueue(queueHead, current);
+  toInfix(current->getRight(), queueHead);
+}
+
+/**
+ * This function uses the expression tree to create
+ * a postfix expression.
+ */
+void toPostfix(Node* current, Node* &queueHead)
+{
+  // once everything is done, jump out of the function
+  if (current == NULL)
+    {
+      return;
+    }
+
+  // operator after operands
+  toPostfix(current->getLeft(), queueHead);
+  toPostfix(current->getRight(), queueHead);
+  enqueue(queueHead, current);
 }
 
 /**
