@@ -135,38 +135,19 @@ int main()
 	   * carry over the next time the user gives an input
 	   */
 
-	  print(queueHead);
 	  while (queueHead != NULL)
 	    {
-	      cout << "dequeueing qh" << endl;
 	      Node* current = dequeue(queueHead);
-	      print(queueHead);
 	     
 	    }
-	  if (queueHead == NULL)
-	    {
-	      cout << "successfully dequeued qh." << endl;
-	    }
-	  print(treeHead);
 	  while (treeHead != NULL)
 	    {
-	      cout << "dequeueing th" << endl;
 	      Node* current = dequeue(treeHead);
-	      print(treeHead);
 	      if (current != treeHead)
 		{
 		  Node* temp = current;
 		  delete temp;
 		}
-	    }
-	  if (treeHead == NULL)
-	    {
-	      cout << "successfully dequeued treeHead" << endl;
-	    }
-
-	  if (stackHead == NULL)
-	    {
-	      cout << "stackhead's null" << endl;
 	    }
 	}
     }
