@@ -15,10 +15,12 @@ using namespace std;
  */
 
 void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead);
+void makeTree(Node* &queueHead, Node* &treeHead);
+void printTree(Node* current, int numTabs);
 void push(Node* &head, Node* newnode);
-char pop(Node* &head, Node* previous);
+Node* pop(Node* &head, Node* previous);
 void enqueue(Node* &head, Node* newnode);
-void dequeue(Node* &head);
+Node* dequeue(Node* &head);
 Node* peek(Node* current);
 void print(Node* current);
 int precedence(char input);
@@ -31,6 +33,9 @@ int main()
   // head of the queue linked list
   Node* queueHead = NULL;
 
+  // head of the binary expresison tree
+  Node* treeHead = NULL;
+  
   bool wantToQuit = false;
 
   while(!wantToQuit)
@@ -49,8 +54,20 @@ int main()
 	}
       else
 	{
-      int length = strlen(input);
-      toPostfix(input, length, stackHead, queueHead);
+	  // convert user input to postfix notation
+	  int length = strlen(input);
+	  toPostfix(input, length, stackHead, queueHead);
+
+	  // make and print the expression tree
+	  makeTree(queueHead, treeHead);
+	  Node* current = treeHead;
+	  while (current != NULL)
+	    {
+	      // we want to print out every tree in the stack
+	      printTree(current, 0);
+	      current = current->getNext();
+	    }
+	  // create the binary expression tree
 	}
     }
   return 0;
@@ -108,7 +125,8 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 		  Node* toQueue = new Node();
 		  if (stackHead != NULL && precedence(input[i]) <= precedence(onStack))
 		    {
-		      toQueue->setValue(pop(stackHead, stackHead));
+		      toQueue = pop(stackHead, stackHead);
+		      // toQueue->setValue(pop(stackHead, stackHead));
 		      enqueue(queueHead, toQueue);
 		    }
 		}
@@ -148,8 +166,8 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 	  while(peek(stackHead) != NULL && onStack != '(')
 	    {
 	      onStack = peek(stackHead)->getValue();
-	      Node* toQueue = new Node();
-	      toQueue->setValue(pop(stackHead, stackHead));
+	      Node* toQueue = pop(stackHead, stackHead);//new Node();
+	      //toQueue->setValue(pop(stackHead, stackHead));
 
 	      if (onStack != '(')
 		{
@@ -164,9 +182,9 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
    // pop everything from the stack into the output
    while (peek(stackHead) != NULL)
      {
-       Node* poppedNode = new Node();
-       char poppedChar = pop(stackHead, stackHead);
-       poppedNode->setValue(poppedChar);
+       Node* poppedNode = pop(stackHead, stackHead);//new Node();
+       //char poppedChar = pop(stackHead, stackHead);
+       //poppedNode->setValue(poppedChar);
        enqueue(queueHead, poppedNode); 
      }
 
@@ -175,10 +193,91 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
    cout << endl;
 
    // clear the queue
-   while (peek(queueHead) != NULL)
+   /* while (peek(queueHead) != NULL)
      {
        dequeue(queueHead);
-     }
+       }*/
+}
+
+
+/**
+ * This function will make the binary expression
+ * tree given a queue of values in postfix notation.
+ */
+void makeTree(Node* &queueHead, Node* &treeHead)
+{
+  // if we empty the queue, get out of makeTree
+  if (queueHead == NULL)
+    {
+      return;
+    }
+
+  cout << "we are inside the make tree function!" << endl;
+  Node* dequeued = dequeue(queueHead);
+  cout << "we have dequeued: " <<  dequeued->getValue() << endl;
+  dequeued->setNext(NULL); // make sure dequeued is NOT connected to anything
+
+  // if the dequeued value is an OPERAND, push it onto the tree stack
+  if (dequeued->getValue() >= '0' && dequeued->getValue() <= '9')
+    {
+      cout << "dequeued is an operand" << endl;
+      // push the dequeued value onto the tree stack                           
+      push(treeHead, dequeued);
+      cout << "printed tree stack: ";
+      print(treeHead);
+      cout << endl;
+    }
+
+  // otherwise, the dequeued value is an OPERATOR
+  else
+    {
+      cout << "dequeued is an operator" << endl;
+      // pop off the last two things, they become the left and right children
+      Node* right = pop(treeHead, treeHead);//new Node();
+      //right->setValue(pop(treeHead, treeHead));
+      Node* left = pop(treeHead, treeHead);//new Node();
+      //left->setValue(pop(treeHead, treeHead));
+      dequeued->setLeft(left);
+      dequeued->setRight(right);
+      cout << "\tleft child: " << dequeued->getLeft()->getValue() << endl;
+      cout << "\tright child: " << dequeued->getRight()->getValue() << endl;
+      push(treeHead, dequeued);
+      cout << "printed tree stack: ";
+      print(treeHead);
+      cout << endl;
+    }
+  
+  // call makeTree again; since we called on dequeued, queueHead has changed
+  makeTree(queueHead, treeHead);
+  
+  // walk through the queue and dequeue the value
+  // this means we will take out the thing at the front of the queue
+  // take the dequeued node
+  // if it is an operand, push it onto the tree STACK
+  // if it is an operator
+  // pop off the last two things on the stack and store them as L + R
+  // push the operator onto the stack, set the L and R as the operandz
+}
+
+void printTree(Node* current, int numTabs)
+{
+  // if we get to a leaf, we want to jump out of print
+  if (current == NULL)
+    {
+      return; // nothing to print
+    }
+
+  // otherwise, we have not reached a leaf
+  numTabs += 1; // indent one more in
+  printTree(current->getRight(), numTabs); // recursively print right child
+  cout << endl; // line break
+  for (int i = 1; i < numTabs; i++)
+    {
+      // indent the number of times as stated by numTabs
+      cout << "\t";
+    }
+  cout << current->getValue() << "\n"; // print the current value
+  printTree(current->getLeft(), numTabs); // recursively print left child
 }
 
 /**
@@ -206,7 +305,7 @@ void push(Node* &head, Node* newnode)
  * This function removes the item on the top of the stack
  * and returns that item to main. It deletes the item from the stack.
  */
-char pop(Node* &head, Node* previous)
+Node* pop(Node* &head, Node* previous)
 {
   //  cout << "inside pop" << endl;
   if (head != NULL)
@@ -224,16 +323,19 @@ char pop(Node* &head, Node* previous)
 	{
 	  // set head to null
 	  head = NULL;
-	  return current->getValue();
+	  return current;
+	  //return current->getValue();
 	}
       else
 	{
 	  previous->setNext(NULL);
-	  return current->getValue();
-	  delete current;
+	  return current;
+	  //return current->getValue();
+	  // delete current;
 	}
     }
-  return ' ';
+  return NULL;
+  //return ' ';
 }
 
 /**
@@ -258,11 +360,11 @@ void enqueue(Node* &head, Node* newnode)
 /**
  * This function removes the item at the front of the queue.
  */ 
-void dequeue(Node* &head)
+Node* dequeue(Node* &head)
 {
   Node* temp = head;
   head = head->getNext();
-  delete temp;
+  return temp;
 }
 
 /**
