@@ -122,11 +122,9 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 		  onStack = peek(stackHead)->getValue();
 		  
 		  // the queue stores the values in postfix
-		  Node* toQueue = new Node();
 		  if (stackHead != NULL && precedence(input[i]) <= precedence(onStack))
 		    {
-		      toQueue = pop(stackHead, stackHead);
-		      // toQueue->setValue(pop(stackHead, stackHead));
+		      Node* toQueue = pop(stackHead, stackHead);
 		      enqueue(queueHead, toQueue);
 		    }
 		}
@@ -166,8 +164,7 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
 	  while(peek(stackHead) != NULL && onStack != '(')
 	    {
 	      onStack = peek(stackHead)->getValue();
-	      Node* toQueue = pop(stackHead, stackHead);//new Node();
-	      //toQueue->setValue(pop(stackHead, stackHead));
+	      Node* toQueue = pop(stackHead, stackHead);
 
 	      if (onStack != '(')
 		{
@@ -182,21 +179,13 @@ void toPostfix(char input[100], int length, Node* &stackHead, Node* &queueHead)
    // pop everything from the stack into the output
    while (peek(stackHead) != NULL)
      {
-       Node* poppedNode = pop(stackHead, stackHead);//new Node();
-       //char poppedChar = pop(stackHead, stackHead);
-       //poppedNode->setValue(poppedChar);
+       Node* poppedNode = pop(stackHead, stackHead);
        enqueue(queueHead, poppedNode); 
      }
 
    cout << "Postfix Conversion: ";
    print(queueHead);
    cout << endl;
-
-   // clear the queue
-   /* while (peek(queueHead) != NULL)
-     {
-       dequeue(queueHead);
-       }*/
 }
 
 
@@ -233,12 +222,11 @@ void makeTree(Node* &queueHead, Node* &treeHead)
     {
       cout << "dequeued is an operator" << endl;
       // pop off the last two things, they become the left and right children
-      Node* right = pop(treeHead, treeHead);//new Node();
-      //right->setValue(pop(treeHead, treeHead));
-      Node* left = pop(treeHead, treeHead);//new Node();
-      //left->setValue(pop(treeHead, treeHead));
+      Node* right = pop(treeHead, treeHead);
+      Node* left = pop(treeHead, treeHead);
       dequeued->setLeft(left);
       dequeued->setRight(right);
+      
       cout << "\tleft child: " << dequeued->getLeft()->getValue() << endl;
       cout << "\tright child: " << dequeued->getRight()->getValue() << endl;
       push(treeHead, dequeued);
@@ -324,18 +312,14 @@ Node* pop(Node* &head, Node* previous)
 	  // set head to null
 	  head = NULL;
 	  return current;
-	  //return current->getValue();
 	}
       else
 	{
 	  previous->setNext(NULL);
 	  return current;
-	  //return current->getValue();
-	  // delete current;
 	}
     }
   return NULL;
-  //return ' ';
 }
 
 /**
